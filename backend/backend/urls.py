@@ -20,6 +20,8 @@ from rest_framework import routers
 
 from producer.api import viewsets as producerviewsets
 from producer.api import serializers as producerserializers
+from producer.views import ProducerAPIView
+
 
 routers = routers.DefaultRouter()
 
@@ -27,6 +29,8 @@ routers.register(r'producer', producerviewsets.ProducerViewSet, basename='Produc
 
 
 urlpatterns = [
+    path('api/producer/', ProducerAPIView.as_view()),
+
     path('admin/', admin.site.urls),
     path('', include(routers.urls)),
 ]
