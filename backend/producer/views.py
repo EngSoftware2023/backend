@@ -75,12 +75,28 @@ class ProducerAPIView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
         
     def put(self, request):
-        producer = Producer.objects.get(cpf=request.GET)
-        serializer = ProducerSerializer(producer, data=request.data)
+        if(not Producer.objects.filter(cpf=request.data['cpf']).exists()):
+            return Response({
+                'error': True,
+                'message': 'Este produtor não existe!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        if(len(request.data['password']) < 6):
+            return Response({
+                'error': True,
+                'message': 'Senha deve ter no mínimo 6 caracteres!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        serializer = ProducerSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.erros, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                'error': False,
+                'message': 'Produtor atualizado com sucesso!'
+            }, status=status.HTTP_200_OK)
+        if(serializer.errors):
+            return Response({
+                'error': True,
+                'message': 'Erro ao atualizar produtor!'
+            }, status=status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request):
         producer = Producer.objects.get(cpf=request.GET)
