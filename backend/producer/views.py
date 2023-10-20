@@ -22,10 +22,20 @@ class ProducerAPIView(APIView):
                 'error': True,
                 'message': 'Senha deve ter no mínimo 6 caracteres!'
             }, status=status.HTTP_400_BAD_REQUEST)
+        if(Producer.objects.filter(email=request.data['cpf']).exists()):
+            return Response({
+                'error': True,
+                'message': 'CPF já cadastrado!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        if(Producer.objects.filter(email=request.data['email']).exists()):
+            return Response({
+                'error': True,
+                'message': 'Email já cadastrado!'
+            }, status=status.HTTP_400_BAD_REQUEST)
         password = make_password(request.data['password'])
         request.data['password'] = password
-        serializer = ProducerSerializer(data=request.data)
 
+        serializer = ProducerSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response({
@@ -34,16 +44,6 @@ class ProducerAPIView(APIView):
             }, status=status.HTTP_201_CREATED)
         
         if serializer.errors:
-            if(Producer.objects.filter(email=request.data['cpf']).exists()):
-                return Response({
-                    'error': True,
-                    'message': 'CPF já cadastrado!'
-                }, status=status.HTTP_400_BAD_REQUEST)
-            if(Producer.objects.filter(email=request.data['email']).exists()):
-                return Response({
-                    'error': True,
-                    'message': 'Email já cadastrado!'
-                }, status=status.HTTP_400_BAD_REQUEST)
             if('cpf' not in request.data):
                 return Response({
                     'error': True,
@@ -99,6 +99,14 @@ class ProducerAPIView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request):
+        if(not Producer.objects.filter(cpf=request.GET).exist):
+            return Response({
+                'error': True,
+                'message': 'Este produtor não existe!'
+            }, status=status.HTTP_400_BAD_REQUEST)
         producer = Producer.objects.get(cpf=request.GET)
         producer.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({
+            'error': False,
+            'message': 'Produtor excluído com sucesso!'
+        }, status=status.HTTP_200_OK)
