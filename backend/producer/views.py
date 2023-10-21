@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework import status
 
+from django.views.decorators.http import require_http_methods
 from django.contrib.auth.hashers import make_password, check_password
 
 class ProducerAPIView(APIView):
@@ -135,10 +136,10 @@ class ProductionAPIView(APIView):
                 'message': 'Quantidade deve ser maior que 0!'
             }, status=status.HTTP_400_BAD_REQUEST)
         
+        serializer = ProductionSerializer(data=request.data)
         product = Product.objects.get(name=request.data['product'])
         request.data['price'] = product.price
 
-        serializer = ProductionSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             product = Product.objects.get(name=request.data['product'])
