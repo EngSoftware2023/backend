@@ -11,11 +11,13 @@ class Producer(models.Model):
     phone = models.CharField(max_length=50)
     email = models.EmailField(max_length=50, unique=True)
     password = models.CharField(max_length=200)
+    productions = models.ManyToManyField(Product, through='ProducerProduction')
 
     def __str__(self):
         return self.name
     
 class Production(models.Model):
+    id = models.AutoField(primary_key=True)
     producer = models.ForeignKey(Producer, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField()
@@ -24,3 +26,10 @@ class Production(models.Model):
 
     def __str__(self):
         return self.product.name + ' - ' + self.producer.name
+    
+class ProducerProduction(models.Model):
+    producer = models.ForeignKey(Producer, on_delete=models.CASCADE)
+    production = models.ForeignKey(Production, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.producer.name + ' - ' + self.production.product.name

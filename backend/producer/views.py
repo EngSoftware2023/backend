@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework import viewsets
-from .models import Producer, Production
+from .models import Producer, Production, ProducerProduction
 from product.models import Product
 from .api.serializers import ProducerSerializer, ProductionSerializer
 
@@ -137,13 +137,20 @@ class ProductionAPIView(APIView):
         
         product = Product.objects.get(name=request.data['product'])
         request.data['price'] = product.price
-        
+
         serializer = ProductionSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             product = Product.objects.get(name=request.data['product'])
-            product.quantity += request.data['quantity']
+            product.stock += request.data['quantity']
             product.save()
+
+            producer_production = ProducerProduction.objects.create(
+                producer=Producer.objects.get(cpf=request.data['producer']),
+                production=Production.objects.get(id=serializer.data['id'])
+            )
+            producer_production.save()
+
             return Response({
                 'error': False,
                 'message': 'Produção cadastrada com sucesso!'
@@ -168,3 +175,63 @@ class ProductionAPIView(APIView):
                 'error': True,
                 'message': 'Erro ao cadastrar produção!'
             }, status=status.HTTP_400_BAD_REQUEST)
+        
+    def put(self, request):
+        if(not Production.objects.filter(id=request.data['id']).exists()):
+            return Response({
+                'error': True,
+                'message': 'Esta produção não existe!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        if(not Producer.objects.filter(cpf=request.data['producer']).exists()):
+            return Response({
+                'error': True,
+                'message': 'Este produtor não existe!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        if(not Product.objects.filter(name=request.data['product']).exists()):
+            return Response({
+                'error': True,
+                'message': 'Este produto não existe!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        if(request.data['quantity'] <= 0):
+            return Response({
+                'error': True,
+                'message': 'Quantidade deve ser maior que 0!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        product = Product.objects.get(name=request.data['product'])
+        request.data['price'] = product.price
+        product.stock -= Production.objects.get(id=request.data['id']).quantity
+
+        serializer = ProductionSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            product = Product.objects.get(name=request.data['product'])
+            product.stock += request.data['quantity']
+            product.save()
+            return Response({
+                'error': False,
+                'message': 'Produção atualizada com sucesso!'
+            }, status=status.HTTP_200_OK)
+        if(serializer.errors):
+            return Response({
+                'error': True,
+                'message': 'Erro ao atualizar produção!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+    def delete(self, request):
+        if(not Production.objects.filter(id=request.GET).exists()):
+            return Response({
+                'error': True,
+                'message': 'Esta produção não existe!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        production = Production.objects.get(id=request.GET)
+        product = Product.objects.get(name=production.product.name)
+        product.stock -= production.quantity
+        product.save()
+        producer_production = ProducerProduction.objects.get(production=production)
+        producer_production.delete()
+        production.delete()
+        return Response({
+            'error': False,
+            'message': 'Produção excluída com sucesso!'
+        }, status=status.HTTP_200_OK)
