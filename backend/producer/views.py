@@ -1,7 +1,8 @@
 from django.shortcuts import render
 from rest_framework import viewsets
-from .models import Producer
-from .api.serializers import ProducerSerializer
+from .models import Producer, Production
+from product.models import Product
+from .api.serializers import ProducerSerializer, ProductionSerializer
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -110,3 +111,60 @@ class ProducerAPIView(APIView):
             'error': False,
             'message': 'Produtor excluído com sucesso!'
         }, status=status.HTTP_200_OK)
+
+class ProductionAPIView(APIView):
+    def get(self, request):
+        production = Production.objects.all()
+        serializer = ProductionSerializer(production, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        if(not Producer.objects.filter(cpf=request.data['producer']).exists()):
+            return Response({
+                'error': True,
+                'message': 'Este produtor não existe!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        if(not Product.objects.filter(name=request.data['product']).exists()):
+            return Response({
+                'error': True,
+                'message': 'Este produto não existe!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        if(request.data['quantity'] <= 0):
+            return Response({
+                'error': True,
+                'message': 'Quantidade deve ser maior que 0!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        product = Product.objects.get(name=request.data['product'])
+        request.data['price'] = product.price
+        
+        serializer = ProductionSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            product = Product.objects.get(name=request.data['product'])
+            product.quantity += request.data['quantity']
+            product.save()
+            return Response({
+                'error': False,
+                'message': 'Produção cadastrada com sucesso!'
+            }, status=status.HTTP_201_CREATED)
+        if(serializer.errors):
+            if('producer' not in request.data):
+                return Response({
+                    'error': True,
+                    'message': 'Produtor não informado!'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            if('product' not in request.data):
+                return Response({
+                    'error': True,
+                    'message': 'Produto não informado!'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            if('quantity' not in request.data):
+                return Response({
+                    'error': True,
+                    'message': 'Quantidade não informada!'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                'error': True,
+                'message': 'Erro ao cadastrar produção!'
+            }, status=status.HTTP_400_BAD_REQUEST)
