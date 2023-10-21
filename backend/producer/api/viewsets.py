@@ -5,3 +5,7 @@ from producer import models
 class ProducerViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.ProducerSerializer
     queryset = models.Producer.objects.all()
+
+class ProductionViewSet(viewsets.ModelViewSet):
+    serializer_class = serializers.ProductionSerializer
+    queryset = models.Production.objects.all()
