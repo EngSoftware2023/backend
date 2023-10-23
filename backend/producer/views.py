@@ -12,6 +12,8 @@ from rest_framework import status
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.hashers import make_password, check_password
 
+from datetime import date
+
 class ProducerAPIView(APIView):
     def get(self, request):
         producer = Producer.objects.all()
@@ -135,6 +137,19 @@ class ProductionAPIView(APIView):
                 'error': True,
                 'message': 'Quantidade deve ser maior que 0!'
             }, status=status.HTTP_400_BAD_REQUEST)
+
+        if(Production.objects.filter(producer=request.data['producer'], product=request.data['product'], date=date.today()).exists()):
+            prodution = Production.objects.get(producer=request.data['producer'], product=request.data['product'], date=date.today())
+            prodution.quantity += request.data['quantity']
+            prodution.save()
+            product = Product.objects.get(name=request.data['product'])
+            product.stock += request.data['quantity']
+            product.save()
+            return Response({
+                'error': False,
+                'message': 'Produção cadastrada com sucesso!'
+            }, status=status.HTTP_201_CREATED)
+
 
         serializer = ProductionSerializer(data=request.data)
         product = Product.objects.get(name=request.data['product'])
