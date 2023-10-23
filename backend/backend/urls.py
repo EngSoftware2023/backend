@@ -22,10 +22,14 @@ from producer.api import viewsets as producerviewsets
 from producer.api import serializers as producerserializers
 from producer.views import ProducerAPIView
 
+from product.api import viewsets as productviewsets
+from product.api import serializers as productserializers
+
 
 routers = routers.DefaultRouter()
 
 routers.register(r'producer', producerviewsets.ProducerViewSet, basename='Producer')
+routers.register(r'product', productviewsets.ProductViewSet, basename='Product')
 
 
 urlpatterns = [
