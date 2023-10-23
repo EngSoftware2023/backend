@@ -135,10 +135,10 @@ class ProductionAPIView(APIView):
                 'error': True,
                 'message': 'Quantidade deve ser maior que 0!'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         serializer = ProductionSerializer(data=request.data)
         product = Product.objects.get(name=request.data['product'])
-        request.data['price'] = product.price
+        # request.data['price'] = product.price
 
         if serializer.is_valid():
             serializer.save()
@@ -200,7 +200,7 @@ class ProductionAPIView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
         
         product = Product.objects.get(name=request.data['product'])
-        request.data['price'] = product.price
+        # request.data['price'] = product.price
         product.stock -= Production.objects.get(id=request.data['id']).quantity
 
         serializer = ProductionSerializer(data=request.data)

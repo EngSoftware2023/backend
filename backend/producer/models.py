@@ -22,7 +22,7 @@ class Production(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField()
     date = models.DateField(auto_now_add=True)
-    price = models.FloatField(null=True, blank=True)
+    # price = models.FloatField(null=True, blank=True)
 
     def __str__(self):
         return self.product.name + ' - ' + self.producer.name
