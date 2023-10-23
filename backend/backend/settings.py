@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-u*pyts(5b+#zm(u*qm(%)8rf&#jsms&v8hs^&ke3*n2i221@zs
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["hendrickscheifer.pythonanywhere.com"]
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'hendrickscheifer.pythonanywhere.com']
 
 
 # Application definition
@@ -51,6 +51,14 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'producer.middlewares.VeririficationMidleware',
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://hendrickscheifer.pythonanywhere.com",
+    "https://hendrickscheifer.pythonanywhere.com",
+    "https://vercel.app",
 ]
 
 ROOT_URLCONF = 'backend.urls'
