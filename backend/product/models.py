@@ -5,7 +5,6 @@ class Product(models.Model):
     price = models.FloatField(null=True)
     stock = models.IntegerField(default=0)
     request = models.IntegerField(default=0)
-    time_life = models.IntegerField(default=1)
 
     def __str__(self):
         return self.name
