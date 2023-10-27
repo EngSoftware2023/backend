@@ -13,15 +13,15 @@ def getDays(month, year):
     else:
         return 30
 
-class VeririficationMidleware():
+class VeririficationMiddleware():
     def verifyProdutions(request):
         for production in Production.objects.all():
             if(production.date.year == request.date.year and production.date.month == request.date.month):
                 if(production.date.day + production.product.time_life) <= request.date.day:
-                    production.delete()
+                    production.status = 'Vencido'
             else:
                 if (production.date.day + production.product.time_life) >= getDays(production.date.month, production.date.year):
                     daysOfLife = production.product.time_life
                     livedDays = getDays(production.date.month, production.date.year) - production.date.day + date.today().day
                     if daysOfLife <= livedDays:
-                        production.delete()
+                        production.status = 'Vencido'

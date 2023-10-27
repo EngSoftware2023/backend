@@ -22,6 +22,7 @@ class Production(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField()
     date = models.DateField(auto_now_add=True)
+    status = models.CharField(max_length=50, default='Disponível')
     # price = models.FloatField(null=True, blank=True)
 
     def __str__(self):
