@@ -18,9 +18,9 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 
-from producer.api.serializers import ProducerSerializer, ProductionSerializer
-from producer.api.viewsets import ProducerViewSet, ProductionViewSet
-from producer.views import ProducerAPIView, ProductionAPIView
+from producer.api import viewsets as producerviewsets
+from producer.api import serializers as producerserializers
+from producer.views import ProducerAPIView
 
 from product.api import viewsets as productviewsets
 from product.api import serializers as productserializers
@@ -29,15 +29,13 @@ from product.views import ProductAPIView
 
 routers = routers.DefaultRouter()
 
-routers.register(r'producer', ProducerViewSet, basename='Producer')
-routers.register(r'production', ProductionViewSet, basename='Production')
+routers.register(r'producer', producerviewsets.ProducerViewSet, basename='Producer')
 routers.register(r'product', productviewsets.ProductViewSet, basename='Product')
 
 
 urlpatterns = [
     path('api/producer/', ProducerAPIView.as_view()),
     path('api/product/', ProductAPIView.as_view()),
-    path('api/production/', ProductionAPIView.as_view()),
 
     path('admin/', admin.site.urls),
     path('', include(routers.urls)),
