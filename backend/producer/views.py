@@ -37,9 +37,9 @@ class ProducerAPIView(APIView):
                 'message': 'Email já cadastrado!'
             }, status=status.HTTP_400_BAD_REQUEST)
         password = make_password(request.data['password'])
-        request.data['password'] = password
-
-        serializer = ProducerSerializer(data=request.data)
+        new_request = request.data.copy()
+        new_request['password'] = password
+        serializer = ProducerSerializer(data=new_request)
         if serializer.is_valid():
             serializer.save()
             return Response({
@@ -89,7 +89,9 @@ class ProducerAPIView(APIView):
                 'error': True,
                 'message': 'Senha deve ter no mínimo 6 caracteres!'
             }, status=status.HTTP_400_BAD_REQUEST)
-        serializer = ProducerSerializer(data=request.data)
+        new_request = request.data.copy()
+        new_request['password'] = make_password(request.data['password'])
+        serializer = ProducerSerializer(data=new_request)
         if serializer.is_valid():
             serializer.save()
             return Response({
