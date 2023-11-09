@@ -91,18 +91,35 @@ class ProducerAPIView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
         new_request = request.data.copy()
         new_request['password'] = make_password(request.data['password'])
-        serializer = ProducerSerializer(data=new_request)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({
+
+        producer = Producer.objects.get(cpf=request.data['cpf'])
+        producer.password = new_request['password']
+        producer.name = new_request['name']
+        producer.email = new_request['email']
+        producer.phone = new_request['phone']
+        producer.address = new_request['address']
+        producer.save()
+        return Response({
                 'error': False,
                 'message': 'Produtor atualizado com sucesso!'
             }, status=status.HTTP_200_OK)
-        if(serializer.errors):
-            return Response({
-                'error': True,
-                'message': 'Erro ao atualizar produtor!'
-            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+        # serializer = ProducerSerializer(data=new_request)
+        # if serializer.is_valid():
+        #     producer = Producer.objects.get(cpf=request.data['cpf'])
+        #     producer.password = new_request['password']
+        #     producer.save()
+        #     return Response({
+        #         'error': False,
+        #         'message': 'Produtor atualizado com sucesso!'
+        #     }, status=status.HTTP_200_OK)
+        # if(serializer.errors):
+        #     return Response({
+        #         'error': True,
+        #         'message': 'Erro ao atualizar produtor!'
+        #     }, status=status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request):
         if(not Producer.objects.filter(cpf=request.GET).exist):
