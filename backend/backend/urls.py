@@ -26,17 +26,21 @@ from product.api import viewsets as productviewsets
 from product.api import serializers as productserializers
 from product.views import ProductAPIView
 
+from user.api import viewsets as userviewsets
+from user.api import serializers as userserializers
+from user.views import UserAPIView
 
 routers = routers.DefaultRouter()
 
 routers.register(r'producer', producerviewsets.ProducerViewSet, basename='Producer')
 routers.register(r'product', productviewsets.ProductViewSet, basename='Product')
+routers.register(r'user', userviewsets.UserViewSet, basename='User')
 
 
 urlpatterns = [
     path('api/producer/', ProducerAPIView.as_view()),
     path('api/product/', ProductAPIView.as_view()),
 
-    path('admin/', admin.site.urls),
+    #path('admin/', admin.site.urls),
     path('', include(routers.urls)),
 ]

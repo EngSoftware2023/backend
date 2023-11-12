@@ -10,6 +10,8 @@ from rest_framework import status
 
 from django.contrib.auth.hashers import make_password, check_password
 
+from user.models import User
+
 class ProducerAPIView(APIView):
     def get(self, request):
         producer = Producer.objects.all()
@@ -17,6 +19,8 @@ class ProducerAPIView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
+        if("type" not in request.data):
+            request.data['type'] = 'producer'    
         if(len(request.data['password']) < 6):
             return Response({
                 'error': True,
@@ -32,11 +36,22 @@ class ProducerAPIView(APIView):
                 'error': True,
                 'message': 'Email já cadastrado!'
             }, status=status.HTTP_400_BAD_REQUEST)
+
         password = make_password(request.data['password'])
         request.data['password'] = password
 
         serializer = ProducerSerializer(data=request.data)
         if serializer.is_valid():
+
+            #create a user model to save the credentials
+            user = User.objects.create(
+                email=request.data['email'],
+                password=password,
+                name=request.data['name'],
+                type=request.data['type']
+            )
+            
+            user.save()
             serializer.save()
             return Response({
                 'error': False,
@@ -87,6 +102,13 @@ class ProducerAPIView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
         serializer = ProducerSerializer(data=request.data)
         if serializer.is_valid():
+            producer = Producer.objects.get(cpf=request.data['cpf'])
+            user = User.objects.get(email=producer.email)
+            user.email = request.data['email']
+            user.name = request.data['name']
+            if(make_password(request.data['password']) != user.password):
+                user.password = make_password(request.data['password'])
+            user.save()
             serializer.save()
             return Response({
                 'error': False,
@@ -99,12 +121,14 @@ class ProducerAPIView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request):
-        if(not Producer.objects.filter(cpf=request.GET).exist):
+        if(not Producer.objects.filter(cpf=request.data['cpf']).exists()):
             return Response({
                 'error': True,
                 'message': 'Este produtor não existe!'
             }, status=status.HTTP_400_BAD_REQUEST)
-        producer = Producer.objects.get(cpf=request.GET)
+        producer = Producer.objects.get(cpf=request.data["cpf"])
+        user = User.objects.get(email=producer.email)
+        user.delete()
         producer.delete()
         return Response({
             'error': False,

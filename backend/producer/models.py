@@ -6,6 +6,7 @@ from product.models import Product
 
 class Producer(models.Model):
     cpf = models.CharField(max_length=50, unique=True, primary_key=True)
+    type = models.CharField(max_length=50, default='producer')
     name = models.CharField(max_length=100)
     address = models.CharField(max_length=100)
     phone = models.CharField(max_length=50)
