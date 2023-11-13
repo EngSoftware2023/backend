@@ -30,6 +30,8 @@ from user.api import viewsets as userviewsets
 from user.api import serializers as userserializers
 from user.views import UserAPIView
 
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
 routers = routers.DefaultRouter()
 
 routers.register(r'producer', producerviewsets.ProducerViewSet, basename='Producer')
@@ -40,6 +42,9 @@ routers.register(r'user', userviewsets.UserViewSet, basename='User')
 urlpatterns = [
     path('api/producer/', ProducerAPIView.as_view()),
     path('api/product/', ProductAPIView.as_view()),
+
+    path('api/token/', TokenObtainPairView.as_view()),
+    path('api/token/refresh/', TokenRefreshView.as_view()),
 
     #path('admin/', admin.site.urls),
     path('', include(routers.urls)),
