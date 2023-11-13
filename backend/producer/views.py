@@ -270,3 +270,75 @@ class ProductionAPIView(APIView):
             'error': False,
             'message': 'Produção excluída com sucesso!'
         }, status=status.HTTP_200_OK)
+
+class ProductionByManagerAPIView(APIView):
+    def post(self, request):
+        if(not Producer.objects.filter(cpf=request.data['producer']).exists()):
+            return Response({
+                'error': True,
+                'message': 'Este produtor não existe!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        if(not Product.objects.filter(name=request.data['product']).exists()):
+            return Response({
+                'error': True,
+                'message': 'Este produto não existe!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        if(request.data['quantity'] <= 0):
+            return Response({
+                'error': True,
+                'message': 'Quantidade deve ser maior que 0!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        if(Production.objects.filter(producer=request.data['producer'], product=request.data['product'], date=date.today()).exists()):
+            prodution = Production.objects.get(producer=request.data['producer'], product=request.data['product'], date=date.today())
+            prodution.quantity += request.data['quantity']
+            prodution.save()
+            product = Product.objects.get(name=request.data['product'])
+            product.stock += request.data['quantity']
+            product.save()
+            return Response({
+                'error': False,
+                'message': 'Produção cadastrada com sucesso!'
+            }, status=status.HTTP_201_CREATED)
+
+
+        serializer = ProductionSerializer(data=request.data)
+        product = Product.objects.get(name=request.data['product'])
+        # request.data['price'] = product.price
+
+        if serializer.is_valid():
+            serializer.save()
+            product = Product.objects.get(name=request.data['product'])
+            product.stock += request.data['quantity']
+            product.save()
+
+            producer_production = ProducerProduction.objects.create(
+                producer=Producer.objects.get(cpf=request.data['producer']),
+                production=Production.objects.get(id=serializer.data['id'])
+            )
+            producer_production.save()
+
+            return Response({
+                'error': False,
+                'message': 'Produção cadastrada com sucesso!'
+            }, status=status.HTTP_201_CREATED)
+        if(serializer.errors):
+            if('producer' not in request.data):
+                return Response({
+                    'error': True,
+                    'message': 'Produtor não informado!'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            if('product' not in request.data):
+                return Response({
+                    'error': True,
+                    'message': 'Produto não informado!'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            if('quantity' not in request.data):
+                return Response({
+                    'error': True,
+                    'message': 'Quantidade não informada!'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                'error': True,
+                'message': 'Erro ao cadastrar produção!'
+            }, status=status.HTTP_400_BAD_REQUEST)
