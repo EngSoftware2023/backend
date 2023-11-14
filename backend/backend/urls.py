@@ -18,9 +18,9 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 
-from producer.api import viewsets as producerviewsets
-from producer.api import serializers as producerserializers
-from producer.views import ProducerAPIView
+from producer.api.serializers import ProducerSerializer, ProductionSerializer
+from producer.api.viewsets import ProducerViewSet, ProductionViewSet
+from producer.views import ProducerAPIView, ProductionAPIView, ProductionByManagerAPIView
 
 from product.api import viewsets as productviewsets
 from product.api import serializers as productserializers
@@ -34,7 +34,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 routers = routers.DefaultRouter()
 
-routers.register(r'producer', producerviewsets.ProducerViewSet, basename='Producer')
+routers.register(r'producer', ProducerViewSet, basename='Producer')
 routers.register(r'product', productviewsets.ProductViewSet, basename='Product')
 routers.register(r'user', userviewsets.UserViewSet, basename='User')
 
@@ -42,6 +42,8 @@ routers.register(r'user', userviewsets.UserViewSet, basename='User')
 urlpatterns = [
     path('api/producer/', ProducerAPIView.as_view()),
     path('api/product/', ProductAPIView.as_view()),
+    path('api/production/', ProductionAPIView.as_view()),
+    path('api/manager/production/', ProductionByManagerAPIView.as_view()),
 
     path('api/token/', CustomTokenObtainPairView.as_view()),
     path('api/token/refresh/', TokenRefreshView.as_view()),

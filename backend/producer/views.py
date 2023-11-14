@@ -38,9 +38,9 @@ class ProducerAPIView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         password = make_password(request.data['password'])
-        request.data['password'] = password
-
-        serializer = ProducerSerializer(data=request.data)
+        new_request = request.data.copy()
+        new_request['password'] = password
+        serializer = ProducerSerializer(data=new_request)
         if serializer.is_valid():
 
             #create a user model to save the credentials
@@ -100,25 +100,37 @@ class ProducerAPIView(APIView):
                 'error': True,
                 'message': 'Senha deve ter no mínimo 6 caracteres!'
             }, status=status.HTTP_400_BAD_REQUEST)
-        serializer = ProducerSerializer(data=request.data)
-        if serializer.is_valid():
-            producer = Producer.objects.get(cpf=request.data['cpf'])
-            user = User.objects.get(email=producer.email)
-            user.email = request.data['email']
-            user.name = request.data['name']
-            if(make_password(request.data['password']) != user.password):
-                user.password = make_password(request.data['password'])
-            user.save()
-            serializer.save()
-            return Response({
+        new_request = request.data.copy()
+        new_request['password'] = make_password(request.data['password'])
+
+        producer = Producer.objects.get(cpf=request.data['cpf'])
+        producer.password = new_request['password']
+        producer.name = new_request['name']
+        producer.email = new_request['email']
+        producer.phone = new_request['phone']
+        producer.address = new_request['address']
+        producer.save()
+        return Response({
                 'error': False,
                 'message': 'Produtor atualizado com sucesso!'
             }, status=status.HTTP_200_OK)
-        if(serializer.errors):
-            return Response({
-                'error': True,
-                'message': 'Erro ao atualizar produtor!'
-            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+        # serializer = ProducerSerializer(data=new_request)
+        # if serializer.is_valid():
+        #     producer = Producer.objects.get(cpf=request.data['cpf'])
+        #     producer.password = new_request['password']
+        #     producer.save()
+        #     return Response({
+        #         'error': False,
+        #         'message': 'Produtor atualizado com sucesso!'
+        #     }, status=status.HTTP_200_OK)
+        # if(serializer.errors):
+        #     return Response({
+        #         'error': True,
+        #         'message': 'Erro ao atualizar produtor!'
+        #     }, status=status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request):
         if(not Producer.objects.filter(cpf=request.data['cpf']).exists()):
@@ -134,3 +146,212 @@ class ProducerAPIView(APIView):
             'error': False,
             'message': 'Produtor excluído com sucesso!'
         }, status=status.HTTP_200_OK)
+
+class ProductionAPIView(APIView):
+    def get(self, request):
+        production = Production.objects.all()
+        serializer = ProductionSerializer(production, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        if(not Producer.objects.filter(cpf=request.data['producer']).exists()):
+            return Response({
+                'error': True,
+                'message': 'Este produtor não existe!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        if(not Product.objects.filter(name=request.data['product']).exists()):
+            return Response({
+                'error': True,
+                'message': 'Este produto não existe!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        if(request.data['quantity'] <= 0):
+            return Response({
+                'error': True,
+                'message': 'Quantidade deve ser maior que 0!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        if(Production.objects.filter(producer=request.data['producer'], product=request.data['product'], date=date.today()).exists()):
+            prodution = Production.objects.get(producer=request.data['producer'], product=request.data['product'], date=date.today())
+            prodution.quantity += request.data['quantity']
+            prodution.save()
+            product = Product.objects.get(name=request.data['product'])
+            product.stock += request.data['quantity']
+            product.save()
+            return Response({
+                'error': False,
+                'message': 'Produção cadastrada com sucesso!'
+            }, status=status.HTTP_201_CREATED)
+
+
+        serializer = ProductionSerializer(data=request.data)
+        product = Product.objects.get(name=request.data['product'])
+        # request.data['price'] = product.price
+
+        if serializer.is_valid():
+            serializer.save()
+            product = Product.objects.get(name=request.data['product'])
+            product.stock += request.data['quantity']
+            product.save()
+
+            producer_production = ProducerProduction.objects.create(
+                producer=Producer.objects.get(cpf=request.data['producer']),
+                production=Production.objects.get(id=serializer.data['id'])
+            )
+            producer_production.save()
+
+            return Response({
+                'error': False,
+                'message': 'Produção cadastrada com sucesso!'
+            }, status=status.HTTP_201_CREATED)
+        if(serializer.errors):
+            if('producer' not in request.data):
+                return Response({
+                    'error': True,
+                    'message': 'Produtor não informado!'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            if('product' not in request.data):
+                return Response({
+                    'error': True,
+                    'message': 'Produto não informado!'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            if('quantity' not in request.data):
+                return Response({
+                    'error': True,
+                    'message': 'Quantidade não informada!'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                'error': True,
+                'message': 'Erro ao cadastrar produção!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+    def put(self, request):
+        if(not Production.objects.filter(id=request.data['id']).exists()):
+            return Response({
+                'error': True,
+                'message': 'Esta produção não existe!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        if(not Producer.objects.filter(cpf=request.data['producer']).exists()):
+            return Response({
+                'error': True,
+                'message': 'Este produtor não existe!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        if(not Product.objects.filter(name=request.data['product']).exists()):
+            return Response({
+                'error': True,
+                'message': 'Este produto não existe!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        if(request.data['quantity'] <= 0):
+            return Response({
+                'error': True,
+                'message': 'Quantidade deve ser maior que 0!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        product = Product.objects.get(name=request.data['product'])
+        # request.data['price'] = product.price
+        product.stock -= Production.objects.get(id=request.data['id']).quantity
+
+        serializer = ProductionSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            product = Product.objects.get(name=request.data['product'])
+            product.stock += request.data['quantity']
+            product.save()
+            return Response({
+                'error': False,
+                'message': 'Produção atualizada com sucesso!'
+            }, status=status.HTTP_200_OK)
+        if(serializer.errors):
+            return Response({
+                'error': True,
+                'message': 'Erro ao atualizar produção!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+    def delete(self, request):
+        if(not Production.objects.filter(id=request.GET).exists()):
+            return Response({
+                'error': True,
+                'message': 'Esta produção não existe!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        production = Production.objects.get(id=request.GET)
+        product = Product.objects.get(name=production.product.name)
+        product.stock -= production.quantity
+        product.save()
+        producer_production = ProducerProduction.objects.get(production=production)
+        producer_production.delete()
+        production.delete()
+        return Response({
+            'error': False,
+            'message': 'Produção excluída com sucesso!'
+        }, status=status.HTTP_200_OK)
+
+class ProductionByManagerAPIView(APIView):
+    def post(self, request):
+        if(not Producer.objects.filter(cpf=request.data['producer']).exists()):
+            return Response({
+                'error': True,
+                'message': 'Este produtor não existe!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        if(not Product.objects.filter(name=request.data['product']).exists()):
+            return Response({
+                'error': True,
+                'message': 'Este produto não existe!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        if(request.data['quantity'] <= 0):
+            return Response({
+                'error': True,
+                'message': 'Quantidade deve ser maior que 0!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        if(Production.objects.filter(producer=request.data['producer'], product=request.data['product'], date=date.today()).exists()):
+            prodution = Production.objects.get(producer=request.data['producer'], product=request.data['product'], date=date.today())
+            prodution.quantity += request.data['quantity']
+            prodution.save()
+            product = Product.objects.get(name=request.data['product'])
+            product.stock += request.data['quantity']
+            product.save()
+            return Response({
+                'error': False,
+                'message': 'Produção cadastrada com sucesso!'
+            }, status=status.HTTP_201_CREATED)
+
+
+        serializer = ProductionSerializer(data=request.data)
+        product = Product.objects.get(name=request.data['product'])
+        # request.data['price'] = product.price
+
+        if serializer.is_valid():
+            serializer.save()
+            product = Product.objects.get(name=request.data['product'])
+            product.stock += request.data['quantity']
+            product.save()
+
+            producer_production = ProducerProduction.objects.create(
+                producer=Producer.objects.get(cpf=request.data['producer']),
+                production=Production.objects.get(id=serializer.data['id'])
+            )
+            producer_production.save()
+
+            return Response({
+                'error': False,
+                'message': 'Produção cadastrada com sucesso!'
+            }, status=status.HTTP_201_CREATED)
+        if(serializer.errors):
+            if('producer' not in request.data):
+                return Response({
+                    'error': True,
+                    'message': 'Produtor não informado!'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            if('product' not in request.data):
+                return Response({
+                    'error': True,
+                    'message': 'Produto não informado!'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            if('quantity' not in request.data):
+                return Response({
+                    'error': True,
+                    'message': 'Quantidade não informada!'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                'error': True,
+                'message': 'Erro ao cadastrar produção!'
+            }, status=status.HTTP_400_BAD_REQUEST)

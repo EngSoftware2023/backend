@@ -52,6 +52,15 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+#    'producer.middlewares.VeririficationMiddleware',
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://hendrickscheifer.pythonanywhere.com",
+    "https://hendrickscheifer.pythonanywhere.com",
+    "https://vercel.app",
 ]
 
 ROOT_URLCONF = 'backend.urls'
