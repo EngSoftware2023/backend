@@ -25,13 +25,13 @@ SECRET_KEY = 'django-insecure-u*pyts(5b+#zm(u*qm(%)8rf&#jsms&v8hs^&ke3*n2i221@zs
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["hendrickscheifer.pythonanywhere.com"]
+ALLOWED_HOSTS = ["hendrickscheifer.pythonanywhere.com", "127.0.0.1"]
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
+    #'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -39,8 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'producer.apps.ProducerConfig',
     'product.apps.ProductConfig',
+    'user.apps.UserConfig',
     'rest_framework',
-
 ]
 
 MIDDLEWARE = [
@@ -102,6 +102,8 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+AUTH_USER_MODEL='user.User'
 
 
 # Internationalization
