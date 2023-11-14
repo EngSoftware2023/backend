@@ -12,6 +12,9 @@ from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.hashers import make_password
 
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .api.serializers import CustomTokenObtainPairSerializer
+
 class UserAPIView(APIView):
     def get(self, request):
         users = User.objects.all()
@@ -26,3 +29,6 @@ class UserAPIView(APIView):
     def delete(self, request):
         User.objects.all().delete(email=request.data['email'])
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
