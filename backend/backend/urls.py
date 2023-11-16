@@ -48,6 +48,7 @@ urlpatterns = [
     path('api/manager/production/', ProductionByManagerAPIView.as_view()),
     path('api/order/', OrderAPIView.as_view()),
 
+    path('api/user/', UserAPIView.as_view()),
     path('api/token/', CustomTokenObtainPairView.as_view()),
     path('api/token/refresh/', TokenRefreshView.as_view()),
 

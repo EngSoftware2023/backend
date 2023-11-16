@@ -9,14 +9,22 @@ from rest_framework import generics
 from rest_framework import status
 
 from django.contrib.auth.hashers import make_password, check_password
+from rest_framework.permissions import IsAuthenticated
 
 class ProductAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         products = Product.objects.all()
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data)
     
     def post(self, request):
+        user = request.user
+        if(user.type != 'admin'):
+            return Response({
+                'error': True,
+                'message': 'Você não tem permissão para cadastrar produtos!'
+            }, status=status.HTTP_400_BAD_REQUEST)
         if(Product.objects.filter(name=request.data['name']).exists()):
             return Response({
                 'error': True,
@@ -44,6 +52,12 @@ class ProductAPIView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
     
     def put(self, request):
+        user = request.user
+        if(user.type != 'admin'):
+            return Response({
+                'error': True,
+                'message': 'Você não tem permissão para atualizar produtos!'
+            }, status=status.HTTP_400_BAD_REQUEST)
         if(not Product.objects.filter(name=request.data['name']).exists()):
             return Response({
                 'error': True,
@@ -66,6 +80,12 @@ class ProductAPIView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
         
     def delete(self, request):
+        user = request.user
+        if(user.type != 'admin'):
+            return Response({
+                'error': True,
+                'message': 'Você não tem permissão para deletar produtos!'
+            }, status=status.HTTP_400_BAD_REQUEST)
         if(not Product.objects.filter(name=request.GET).exists()):
             return Response({
                 'error': True,
@@ -80,12 +100,19 @@ class ProductAPIView(APIView):
         }, status=status.HTTP_200_OK)
 
 class OrderAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         orders = Order.objects.all()
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data)
     
     def post(self, request):
+        user = request.user
+        if(user.type != 'admin'):
+            return Response({
+                'error': True,
+                'message': 'Você não tem permissão para cadastrar pedidos!'
+            }, status=status.HTTP_400_BAD_REQUEST)
         serializer = OrderSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -128,6 +155,12 @@ class OrderAPIView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
     
     def put(self, request):
+        user = request.user
+        if(user.type != 'admin'):
+            return Response({
+                'error': True,
+                'message': 'Você não tem permissão para atualizar pedidos!'
+            }, status=status.HTTP_400_BAD_REQUEST)
         if(not Order.objects.filter(id=request.data['id']).exists()):
             return Response({
                 'error': True,
@@ -189,6 +222,12 @@ class OrderAPIView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
         
     def delete(self, request):
+        user = request.user
+        if(user.type != 'admin'):
+            return Response({
+                'error': True,
+                'message': 'Você não tem permissão para deletar pedidos!'
+            }, status=status.HTTP_400_BAD_REQUEST)
         if(not Order.objects.filter(id=request.data['id']).exists()):
             return Response({
                 'error': True,
