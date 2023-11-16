@@ -24,7 +24,10 @@ class UserAPIView(APIView):
         data = request.data
         data['password'] = make_password(data['password'])
         user = User.objects.create(**data)
-        return Response(user.values())
+        return Response({
+            "error": False,
+            "message": "Usuário criado com sucesso!",
+        })
 
     def delete(self, request):
         User.objects.all().delete(email=request.data['email'])

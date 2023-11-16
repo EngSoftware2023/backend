@@ -14,12 +14,17 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         token = super(CustomTokenObtainPairSerializer, cls).get_token(user)
 
-        producer = producer_models.Producer.objects.get(email=user.email)
+        if(user.type == 'producer'):
+            producer = producer_models.Producer.objects.get(email=user.email)
 
-        token['type'] = user.type
-        token['name'] = producer.name
-        token['email'] = producer.email
-        token['phone'] = producer.phone
-        token['address'] = producer.address           
+            token['type'] = user.type
+            token['cpf'] = producer.cpf
+            token['name'] = producer.name
+            token['email'] = producer.email
+            token['phone'] = producer.phone
+            token['address'] = producer.address
+        else:
+            token['type'] = user.type
+            token['email'] = user.email
 
         return token

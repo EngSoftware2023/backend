@@ -2,6 +2,7 @@ from django.db import models
 
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import BaseUserManager
+from django.contrib.auth.hashers import make_password, check_password
 
 class UserManager(BaseUserManager):
     def create_user(self, email,name,  password):

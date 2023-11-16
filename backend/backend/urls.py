@@ -24,7 +24,7 @@ from producer.views import ProducerAPIView, ProductionAPIView, ProductionByManag
 
 from product.api import viewsets as productviewsets
 from product.api import serializers as productserializers
-from product.views import ProductAPIView
+from product.views import ProductAPIView, OrderAPIView
 
 from user.api import viewsets as userviewsets
 from user.api import serializers as userserializers
@@ -37,6 +37,8 @@ routers = routers.DefaultRouter()
 routers.register(r'producer', ProducerViewSet, basename='Producer')
 routers.register(r'product', productviewsets.ProductViewSet, basename='Product')
 routers.register(r'user', userviewsets.UserViewSet, basename='User')
+routers.register(r'production', ProductionViewSet, basename='Production')
+routers.register(r'order', productviewsets.OrderViewSet, basename='Order')
 
 
 urlpatterns = [
@@ -44,7 +46,9 @@ urlpatterns = [
     path('api/product/', ProductAPIView.as_view()),
     path('api/production/', ProductionAPIView.as_view()),
     path('api/manager/production/', ProductionByManagerAPIView.as_view()),
+    path('api/order/', OrderAPIView.as_view()),
 
+    path('api/user/', UserAPIView.as_view()),
     path('api/token/', CustomTokenObtainPairView.as_view()),
     path('api/token/refresh/', TokenRefreshView.as_view()),
 

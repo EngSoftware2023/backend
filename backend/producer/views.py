@@ -1,7 +1,10 @@
+from datetime import date
 from django.shortcuts import render
 from rest_framework import viewsets
-from .models import Producer
-from .api.serializers import ProducerSerializer
+from .models import Producer, Production, ProducerProduction
+from product.models import Product
+from .api.serializers import ProducerSerializer, ProductionSerializer
+from product.api.serializers import ProductSerializer
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -9,6 +12,7 @@ from rest_framework import generics
 from rest_framework import status
 
 from django.contrib.auth.hashers import make_password, check_password
+from rest_framework.permissions import IsAuthenticated
 
 from user.models import User
 
@@ -31,7 +35,7 @@ class ProducerAPIView(APIView):
                 'error': True,
                 'message': 'CPF já cadastrado!'
             }, status=status.HTTP_400_BAD_REQUEST)
-        if(Producer.objects.filter(email=request.data['email']).exists()):
+        if(Producer.objects.filter(email=request.data['email']).exists() or User.objects.filter(email=request.data['email']).exists()):
             return Response({
                 'error': True,
                 'message': 'Email já cadastrado!'
@@ -148,17 +152,21 @@ class ProducerAPIView(APIView):
         }, status=status.HTTP_200_OK)
 
 class ProductionAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         production = Production.objects.all()
         serializer = ProductionSerializer(production, many=True)
         return Response(serializer.data)
 
     def post(self, request):
-        if(not Producer.objects.filter(cpf=request.data['producer']).exists()):
+        user = request.user
+        if(user.type != 'producer'):
             return Response({
                 'error': True,
-                'message': 'Este produtor não existe!'
-            }, status=status.HTTP_400_BAD_REQUEST)
+                'message': 'Você não tem permissão para fazer isso!'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        producer = Producer.objects.get(email=user.email)
         if(not Product.objects.filter(name=request.data['product']).exists()):
             return Response({
                 'error': True,
@@ -170,8 +178,8 @@ class ProductionAPIView(APIView):
                 'message': 'Quantidade deve ser maior que 0!'
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        if(Production.objects.filter(producer=request.data['producer'], product=request.data['product'], date=date.today()).exists()):
-            prodution = Production.objects.get(producer=request.data['producer'], product=request.data['product'], date=date.today())
+        if(Production.objects.filter(producer=producer.cpf, product=request.data['product'], date=date.today()).exists()):
+            prodution = Production.objects.get(producer=producer.cpf, product=request.data['product'], date=date.today())
             prodution.quantity += request.data['quantity']
             prodution.save()
             product = Product.objects.get(name=request.data['product'])
@@ -182,7 +190,7 @@ class ProductionAPIView(APIView):
                 'message': 'Produção cadastrada com sucesso!'
             }, status=status.HTTP_201_CREATED)
 
-
+        request.data['producer'] = producer.cpf
         serializer = ProductionSerializer(data=request.data)
         product = Product.objects.get(name=request.data['product'])
         # request.data['price'] = product.price
@@ -194,11 +202,12 @@ class ProductionAPIView(APIView):
             product.save()
 
             producer_production = ProducerProduction.objects.create(
-                producer=Producer.objects.get(cpf=request.data['producer']),
+                producer=producer,
                 production=Production.objects.get(id=serializer.data['id'])
             )
             producer_production.save()
 
+            production = Production.objects.get(id=serializer.data['id'])
             return Response({
                 'error': False,
                 'message': 'Produção cadastrada com sucesso!'
@@ -225,15 +234,22 @@ class ProductionAPIView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
         
     def put(self, request):
+        user = request.user
+        if(user.type != 'producer'):
+            return Response({
+                'error': True,
+                'message': 'Você não tem permissão para fazer isso!'
+            }, status=status.HTTP_401_UNAUTHORIZED)
         if(not Production.objects.filter(id=request.data['id']).exists()):
             return Response({
                 'error': True,
                 'message': 'Esta produção não existe!'
             }, status=status.HTTP_400_BAD_REQUEST)
-        if(not Producer.objects.filter(cpf=request.data['producer']).exists()):
+        producer = Producer.objects.get(email=user.email)
+        if(not Production.objects.filter(id=request.data['id'], producer=producer.cpf).exists()):
             return Response({
                 'error': True,
-                'message': 'Este produtor não existe!'
+                'message': 'Esta produção não pertence a você!'
             }, status=status.HTTP_400_BAD_REQUEST)
         if(not Product.objects.filter(name=request.data['product']).exists()):
             return Response({
@@ -267,6 +283,23 @@ class ProductionAPIView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
         
     def delete(self, request):
+        user = request.user
+        if(user.type != 'producer'):
+            return Response({
+                'error': True,
+                'message': 'Você não tem permissão para fazer isso!'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        if(not Production.objects.filter(id=request.data['id']).exists()):
+            return Response({
+                'error': True,
+                'message': 'Esta produção não existe!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        producer = Producer.objects.get(email=user.email)
+        if(not Production.objects.filter(id=request.data['id'], producer=producer.cpf).exists()):
+            return Response({
+                'error': True,
+                'message': 'Esta produção não pertence a você!'
+            }, status=status.HTTP_400_BAD_REQUEST)
         if(not Production.objects.filter(id=request.GET).exists()):
             return Response({
                 'error': True,
@@ -285,7 +318,14 @@ class ProductionAPIView(APIView):
         }, status=status.HTTP_200_OK)
 
 class ProductionByManagerAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
+        user = request.user
+        if(user.type != 'admin'):
+            return Response({
+                'error': True,
+                'message': 'Você não tem permissão para fazer isso!'
+            }, status=status.HTTP_401_UNAUTHORIZED)
         if(not Producer.objects.filter(cpf=request.data['producer']).exists()):
             return Response({
                 'error': True,
