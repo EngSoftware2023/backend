@@ -89,10 +89,10 @@ class OrderAPIView(APIView):
         serializer = OrderSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            print(serializer.data['id'])
             order = Order.objects.get(id=serializer.data['id'])
             for product in request.data['products']:
                 if(not Product.objects.filter(name=product['name']).exists()):
+                    order.delete()
                     return Response({
                         'error': True,
                         'message': 'Produto não cadastrado!'
@@ -100,6 +100,9 @@ class OrderAPIView(APIView):
                 if(OrderProduct.objects.filter(order=serializer.data['id'], product=product['name']).exists()):
                     orderProduct = OrderProduct.objects.get(order=serializer.data['id'], product=product['name'])
                     orderProduct.quantity += product['quantity']
+                    productRegistered = Product.objects.get(name=product['name'])
+                    productRegistered.request += product['quantity']
+                    productRegistered.save()
                     orderProduct.save()
                 orderProduct = OrderProduct(
                                         order=Order.objects.get(id=serializer.data['id']), 
@@ -134,7 +137,46 @@ class OrderAPIView(APIView):
         order = Order.objects.get(id=request.data['id'])
         serializer = OrderSerializer(order, data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            order = Order.objects.get(id=serializer.data['id'])
+            for product in order.products.all():
+                if(product not in request.data['products']):
+                    productRegistered = Product.objects.get(name=product.name)
+                    productRegistered.request -= product.quantity
+                    productRegistered.save()
+                    orderProduct = OrderProduct.objects.get(order=order.id, product=product.name)
+                    order.total -= orderProduct.price * orderProduct.quantity
+                    order.save()
+                    orderProduct.delete()
+            for product in request.data['products']:
+                if(not Product.objects.filter(name=product['name']).exists()):
+                    return Response({
+                        'error': True,
+                        'message': 'Produto não cadastrado!'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                if(OrderProduct.objects.filter(order=order.id, product=product['name']).exists()):
+                    orderProduct = OrderProduct.objects.get(order=serializer.data['id'], product=product['name'])
+                    order.total -= orderProduct.price * orderProduct.quantity
+                    productRegistered = Product.objects.get(name=product['name'])
+                    productRegistered.request -= product.quantity
+                    productRegistered.request += product['quantity']
+                    productRegistered.save()
+                    orderProduct.quantity = product['quantity']
+                    orderProduct.price = product['price']
+                    order.total += product['price'] * product['quantity']
+
+                    orderProduct.save()
+                else:
+                    orderProduct = OrderProduct(
+                                            order=Order.objects.get(id=order.id), 
+                                            product=Product.objects.get(name=product['name']), 
+                                                                        quantity=product['quantity'], 
+                                                                        price=product['price'])
+                    orderProduct.save()
+                    order.total += product['price'] * product['quantity']
+                    order.save()
+                    productRegistered = Product.objects.get(name=product['name'])
+                    productRegistered.request += product['quantity']
+                    productRegistered.save()
             return Response({
                 'error': False,
                 'message': 'Pedido atualizado com sucesso!'
