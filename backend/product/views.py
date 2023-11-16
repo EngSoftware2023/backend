@@ -174,7 +174,9 @@ class OrderAPIView(APIView):
             for product in order.products.all():
                 if(product not in request.data['products']):
                     productRegistered = Product.objects.get(name=product.name)
-                    productRegistered.request -= product.quantity
+                    oldProduct = OrderProduct.objects.get(order=order.id, product=product.name)
+                    print(product)
+                    productRegistered.request -= oldProduct.quantity
                     productRegistered.save()
                     orderProduct = OrderProduct.objects.get(order=order.id, product=product.name)
                     order.total -= orderProduct.price * orderProduct.quantity

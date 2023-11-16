@@ -1,7 +1,7 @@
 from datetime import date
 from django.shortcuts import render
 from rest_framework import viewsets
-from .models import Producer, Production
+from .models import Producer, Production, ProducerProduction
 from product.models import Product
 from .api.serializers import ProducerSerializer, ProductionSerializer
 from product.api.serializers import ProductSerializer
@@ -190,7 +190,7 @@ class ProductionAPIView(APIView):
                 'message': 'Produção cadastrada com sucesso!'
             }, status=status.HTTP_201_CREATED)
 
-
+        request.data['producer'] = producer.cpf
         serializer = ProductionSerializer(data=request.data)
         product = Product.objects.get(name=request.data['product'])
         # request.data['price'] = product.price
@@ -207,6 +207,7 @@ class ProductionAPIView(APIView):
             )
             producer_production.save()
 
+            production = Production.objects.get(id=serializer.data['id'])
             return Response({
                 'error': False,
                 'message': 'Produção cadastrada com sucesso!'
