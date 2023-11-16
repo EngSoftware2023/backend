@@ -12,6 +12,7 @@ class Producer(models.Model):
     phone = models.CharField(max_length=50)
     email = models.EmailField(max_length=50, unique=True)
     password = models.CharField(max_length=200)
+    productions = models.ManyToManyField(Product, through='Production')
 
     def __str__(self):
         return self.name
@@ -22,7 +23,6 @@ class Production(models.Model):
     quantity = models.IntegerField()
     date = models.DateField(auto_now_add=True)
     status = models.CharField(max_length=50, default='Disponível')
-    # price = models.FloatField(null=True, blank=True)
 
     def __str__(self):
         return self.product.name + ' - ' + self.producer.name

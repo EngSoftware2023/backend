@@ -17,9 +17,10 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         producer = producer_models.Producer.objects.get(email=user.email)
 
         token['type'] = user.type
+        token['cpf'] = producer.cpf
         token['name'] = producer.name
         token['email'] = producer.email
         token['phone'] = producer.phone
-        token['address'] = producer.address           
+        token['address'] = producer.address
 
         return token
