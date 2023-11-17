@@ -20,7 +20,7 @@ from rest_framework import routers
 
 from producer.api.serializers import ProducerSerializer, ProductionSerializer
 from producer.api.viewsets import ProducerViewSet, ProductionViewSet, ProducerProductionViewSet, IssueViewSet, ProducerIssueViewSet, PlantingViewSet, ProducerPlantingViewSet
-from producer.views import ProducerAPIView, ProductionAPIView, ProductionByManagerAPIView, IssueAPIView
+from producer.views import ProducerAPIView, ProductionAPIView, ProductionByManagerAPIView, IssueAPIView, PlantingAPIView
 
 from product.api import viewsets as productviewsets
 from product.api import serializers as productserializers
@@ -50,6 +50,7 @@ urlpatterns = [
     path('api/manager/production/', ProductionByManagerAPIView.as_view()),
     path('api/order/', OrderAPIView.as_view()),
     path('api/issue/', IssueAPIView.as_view()),
+    path('api/planting/', PlantingAPIView.as_view()),
 
     path('api/user/', UserAPIView.as_view()),
     path('api/token/', CustomTokenObtainPairView.as_view()),
