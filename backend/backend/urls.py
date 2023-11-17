@@ -19,7 +19,7 @@ from django.urls import path, include
 from rest_framework import routers
 
 from producer.api.serializers import ProducerSerializer, ProductionSerializer
-from producer.api.viewsets import ProducerViewSet, ProductionViewSet, ProducerProductionViewSet, IssueViewSet, ProducerIssueViewSet
+from producer.api.viewsets import ProducerViewSet, ProductionViewSet, ProducerProductionViewSet, IssueViewSet, ProducerIssueViewSet, PlantingViewSet, ProducerPlantingViewSet
 from producer.views import ProducerAPIView, ProductionAPIView, ProductionByManagerAPIView, IssueAPIView
 
 from product.api import viewsets as productviewsets
@@ -40,6 +40,7 @@ routers.register(r'user', userviewsets.UserViewSet, basename='User')
 routers.register(r'production', ProductionViewSet, basename='Production')
 routers.register(r'order', productviewsets.OrderViewSet, basename='Order')
 routers.register(r'issue', IssueViewSet, basename='Issue')
+routers.register(r'planting', PlantingViewSet, basename='Planting')
 
 
 urlpatterns = [
