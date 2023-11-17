@@ -1,9 +1,9 @@
 from datetime import date
 from django.shortcuts import render
 from rest_framework import viewsets
-from .models import Producer, Production, ProducerProduction, Issue, ProducerIssue
+from .models import Producer, Production, ProducerProduction, Issue, ProducerIssue, Planting, ProducerPlanting
 from product.models import Product
-from .api.serializers import ProducerSerializer, ProductionSerializer, ProducerProductionSerializer, IssueSerializer, ProducerIssueSerializer
+from .api.serializers import ProducerSerializer, ProductionSerializer, ProducerProductionSerializer, IssueSerializer, ProducerIssueSerializer, PlantingSerializer, ProducerPlantingSerializer
 from product.api.serializers import ProductSerializer
 
 from rest_framework.views import APIView
@@ -498,3 +498,5 @@ class IssueAPIView(APIView):
             'error': False,
             'message': 'Problema excluído com sucesso!'
         }, status=status.HTTP_200_OK)
+    
+class
