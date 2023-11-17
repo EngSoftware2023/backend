@@ -9,3 +9,11 @@ class ProducerViewSet(viewsets.ModelViewSet):
 class ProductionViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.ProductionSerializer
     queryset = models.Production.objects.all()
+
+class ProducerProductionViewSet(viewsets.ModelViewSet):
+    serializer_class = serializers.ProducerProductionSerializer
+    queryset = models.ProducerProduction.objects.all()
+
+class IssueViewSet(viewsets.ModelViewSet):
+    serializer_class = serializers.IssueSerializer
+    queryset = models.Issue.objects.all()

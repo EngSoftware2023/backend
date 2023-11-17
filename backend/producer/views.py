@@ -1,9 +1,9 @@
 from datetime import date
 from django.shortcuts import render
 from rest_framework import viewsets
-from .models import Producer, Production, ProducerProduction
+from .models import Producer, Production, ProducerProduction, Issue, ProducerIssue
 from product.models import Product
-from .api.serializers import ProducerSerializer, ProductionSerializer
+from .api.serializers import ProducerSerializer, ProductionSerializer, ProducerProductionSerializer, IssueSerializer, ProducerIssueSerializer
 from product.api.serializers import ProductSerializer
 
 from rest_framework.views import APIView
@@ -395,3 +395,106 @@ class ProductionByManagerAPIView(APIView):
                 'error': True,
                 'message': 'Erro ao cadastrar produção!'
             }, status=status.HTTP_400_BAD_REQUEST)
+
+class IssueAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        issue = Issue.objects.all()
+        serializer = IssueSerializer(issue, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        user = request.user
+        if(user.type != 'producer'):
+            return Response({
+                'error': True,
+                'message': 'Você não tem permissão para fazer isso!'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        producer = Producer.objects.get(email=user.email)
+        request.data['producer'] = producer.cpf
+        serializer = IssueSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            producer_issue = ProducerIssue.objects.create(
+                producer=producer,
+                issue=Issue.objects.get(id=serializer.data['id'])
+            )
+            producer_issue.save()
+            return Response({
+                'error': False,
+                'message': 'Problema cadastrado com sucesso!'
+            }, status=status.HTTP_201_CREATED)
+        if(serializer.errors):
+            if('type' not in request.data):
+                return Response({
+                    'error': True,
+                    'message': 'Tipo não informado!'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            if('description' not in request.data):
+                return Response({
+                    'error': True,
+                    'message': 'Descrição não informada!'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                'error': True,
+                'message': 'Erro ao cadastrar problema!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+    def put(self, request):
+        user = request.user
+        if(user.type != 'producer'):
+            return Response({
+                'error': True,
+                'message': 'Você não tem permissão para fazer isso!'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        if(not Issue.objects.filter(id=request.data['id']).exists()):
+            return Response({
+                'error': True,
+                'message': 'Este problema não existe!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        producer = Producer.objects.get(email=user.email)
+        if(not Issue.objects.filter(id=request.data['id'], producer=producer.cpf).exists()):
+            return Response({
+                'error': True,
+                'message': 'Este problema não pertence a você!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        serializer = IssueSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'error': False,
+                'message': 'Problema atualizado com sucesso!'
+            }, status=status.HTTP_200_OK)
+        if(serializer.errors):
+            return Response({
+                'error': True,
+                'message': 'Erro ao atualizar problema!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request):
+        user = request.user
+        if(user.type != 'producer'):
+            return Response({
+                'error': True,
+                'message': 'Você não tem permissão para fazer isso!'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        if(not Issue.objects.filter(id=request.data['id']).exists()):
+            return Response({
+                'error': True,
+                'message': 'Este problema não existe!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        producer = Producer.objects.get(email=user.email)
+        if(not Issue.objects.filter(id=request.data['id'], producer=producer.cpf).exists()):
+            return Response({
+                'error': True,
+                'message': 'Este problema não pertence a você!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        issue = Issue.objects.get(id=request.data["id"])
+        producer_issue = ProducerIssue.objects.get(issue=issue)
+        producer_issue.delete()
+        issue.delete()
+        return Response({
+            'error': False,
+            'message': 'Problema excluído com sucesso!'
+        }, status=status.HTTP_200_OK)

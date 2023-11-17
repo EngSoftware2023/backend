@@ -13,6 +13,7 @@ class Producer(models.Model):
     email = models.EmailField(max_length=50, unique=True)
     password = models.CharField(max_length=200)
     productions = models.ManyToManyField("Production", through='ProducerProduction', related_name='productions')
+    issues = models.ManyToManyField("Issue", through='ProducerIssue', related_name='issues')
 
     def __str__(self):
         return self.name
@@ -33,3 +34,21 @@ class ProducerProduction(models.Model):
 
     def __str__(self):
         return self.product.name + ' - ' + self.producer.name
+    
+class Issue(models.Model):
+    id = models.AutoField(primary_key=True)
+    producer = models.ForeignKey(Producer, on_delete=models.CASCADE)
+    type = models.CharField(max_length=50)
+    description = models.CharField(max_length=1000)
+    date = models.DateField(auto_now_add=True)
+    status = models.CharField(max_length=50, default='Aberto')
+
+    def __str__(self):
+        return self.type + ' - ' + self.producer.name
+
+class ProducerIssue(models.Model):
+    producer = models.ForeignKey(Producer, on_delete=models.CASCADE)
+    issue = models.ForeignKey(Issue, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.type + ' - ' + self.producer.name
