@@ -1,9 +1,9 @@
 from datetime import date
 from django.shortcuts import render
 from rest_framework import viewsets
-from .models import Producer, Production, ProducerProduction, Issue, ProducerIssue
+from .models import Producer, Production, ProducerProduction, Issue, ProducerIssue, Planting, ProducerPlanting
 from product.models import Product
-from .api.serializers import ProducerSerializer, ProductionSerializer, ProducerProductionSerializer, IssueSerializer, ProducerIssueSerializer
+from .api.serializers import ProducerSerializer, ProductionSerializer, ProducerProductionSerializer, IssueSerializer, ProducerIssueSerializer, PlantingSerializer, ProducerPlantingSerializer
 from product.api.serializers import ProductSerializer
 
 from rest_framework.views import APIView
@@ -497,4 +497,127 @@ class IssueAPIView(APIView):
         return Response({
             'error': False,
             'message': 'Problema excluído com sucesso!'
+        }, status=status.HTTP_200_OK)
+    
+class PlantingAPIView(APIView):
+    def get(self, request):
+        planting = Planting.objects.all()
+        serializer = PlantingSerializer(planting, many=True)
+        return Response(serializer.data)
+    
+    def post(self, request):
+        user = request.user
+        if(user.type != 'producer'):
+            return Response({
+                'error': True,
+                'message': 'Você não tem permissão para fazer isso!'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        producer = Producer.objects.get(email=user.email)
+        if(not Product.objects.filter(name=request.data['product']).exists()):
+            return Response({
+                'error': True,
+                'message': 'Este produto não existe!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        if(request.data['expeted_harvest'] < date.today()):
+            return Response({
+                'error': True,
+                'message': 'Data de colheita deve ser maior que a data atual!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        request.data['producer'] = producer.cpf
+        serializer = PlantingSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            producer_planting = ProducerPlanting.objects.create(
+                producer=producer,
+                planting=Planting.objects.get(id=serializer.data['id'])
+            )
+            producer_planting.save()
+            return Response({
+                'error': False,
+                'message': 'Plantio cadastrado com sucesso!'
+            }, status=status.HTTP_201_CREATED)
+        if(serializer.errors):
+            if('product' not in request.data):
+                return Response({
+                    'error': True,
+                    'message': 'Produto não informado'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            if('expeted_harvest' not in request.data):
+                return Response({
+                    'error': True,
+                    'message': 'Data de colheita não informada!'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                'error': True,
+                'message': 'Erro ao cadastrar plantio!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+    def put(self, request):
+        user = request.user
+        if(user.type != 'producer'):
+            return Response({
+                'error': True,
+                'message': 'Você não tem permissão para fazer isso!'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        if(not Planting.objects.filter(id=request.data['id']).exists()):
+            return Response({
+                'error': True,
+                'message': 'Este plantio não existe!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        producer = Producer.objects.get(email=user.email)
+        if(not Planting.objects.filter(id=request.data['id'], producer=producer.cpf).exists()):
+            return Response({
+                'error': True,
+                'message': 'Este plantio não pertence a você!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        if(not Product.objects.filter(name=request.data['product']).exists()):
+            return Response({
+                'error': True,
+                'message': 'Este produto não existe!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        if(request.data['expeted_harvest'] < date.today()):
+            return Response({
+                'error': True,
+                'message': 'Data de colheita deve ser maior que a data atual!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        serializer = PlantingSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'error': False,
+                'message': 'Plantio atualizado com sucesso!'
+            }, status=status.HTTP_200_OK)
+        if(serializer.errors):
+            return Response({
+                'error': True,
+                'message': 'Erro ao atualizar plantio!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request):
+        user = request.user
+        if(user.type != 'producer'):
+            return Response({
+                'error': True,
+                'message': 'Você não tem permissão para fazer isso!'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        if(not Planting.objects.filter(id=request.data['id']).exists()):
+            return Response({
+                'error': True,
+                'message': 'Este plantio não existe!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        producer = Producer.objects.get(email=user.email)
+        if(not Planting.objects.filter(id=request.data['id'], producer=producer.cpf).exists()):
+            return Response({
+                'error': True,
+                'message': 'Este plantio não pertence a você!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        planting = Planting.objects.get(id=request.data["id"])
+        producer_planting = ProducerPlanting.objects.get(planting=planting)
+        producer_planting.delete()
+        planting.delete()
+        return Response({
+            'error': False,
+            'message': 'Plantio excluído com sucesso!'
         }, status=status.HTTP_200_OK)

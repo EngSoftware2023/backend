@@ -14,6 +14,7 @@ class Producer(models.Model):
     password = models.CharField(max_length=200)
     productions = models.ManyToManyField("Production", through='ProducerProduction', related_name='productions')
     issues = models.ManyToManyField("Issue", through='ProducerIssue', related_name='issues')
+    plantings = models.ManyToManyField("Planting", through='ProducerPlanting' related_name='plantings')
 
     def __str__(self):
         return self.name
@@ -52,3 +53,20 @@ class ProducerIssue(models.Model):
 
     def __str__(self):
         return self.type + ' - ' + self.producer.name
+    
+class Planting(models.Model):
+    producer = models.ForeignKey(Producer, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    date = models.DateField(auto_now_add=True)
+    expeted_harvest = models.DateField()
+    status = models.CharField(max_length=50, default='Em crescimento')
+
+    def __str__(self):
+        return self.product.name + ' - ' + self.producer.name
+    
+class ProducerPlanting(models.Model):
+    producer = models.ForeignKey(Producer, on_delete=models.CASCADE)
+    planting = models.ForeignKey(Planting, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.product.name + ' - ' + self.producer.name

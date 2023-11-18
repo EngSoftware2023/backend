@@ -25,3 +25,13 @@ class ProducerIssueSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.ProducerIssue
         fields = '__all__'
+
+class PlantingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Planting
+        fields = '__all__'
+
+class ProducerPlantingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.ProducerPlanting
+        fields = '__all__'

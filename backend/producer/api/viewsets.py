@@ -17,3 +17,15 @@ class ProducerProductionViewSet(viewsets.ModelViewSet):
 class IssueViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.IssueSerializer
     queryset = models.Issue.objects.all()
+
+class ProducerIssueViewSet(viewsets.ModelViewSet):
+    serializer_class = serializers.ProducerIssueSerializer
+    queryset = models.ProducerIssue.objects.all()
+
+class PlantingViewSet(viewsets.ModelViewSet):
+    serializer_class = serializers.PlantingSerializer
+    queryset = models.Planting.objects.all()
+
+class ProducerPlantingViewSet(viewsets.ModelViewSet):
+    serializer_class = serializers.ProducerPlantingSerializer
+    queryset = models.ProducerPlanting.objects.all()
