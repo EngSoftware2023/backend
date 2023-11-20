@@ -29,3 +29,11 @@ class PlantingViewSet(viewsets.ModelViewSet):
 class ProducerPlantingViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.ProducerPlantingSerializer
     queryset = models.ProducerPlanting.objects.all()
+
+class PulverizationViewSet(viewsets.ModelViewSet):
+    serializer_class = serializers.PulverizationSerializer
+    queryset = models.Pulverization.objects.all()
+
+class PlantingPulverizationViewSet(viewsets.ModelViewSet):
+    serializer_class = serializers.PlantingPulverizationSerializer
+    queryset = models.PlantingPulverization.objects.all()

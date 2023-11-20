@@ -19,12 +19,12 @@ from django.urls import path, include
 from rest_framework import routers
 
 from producer.api.serializers import ProducerSerializer, ProductionSerializer
-from producer.api.viewsets import ProducerViewSet, ProductionViewSet, ProducerProductionViewSet, IssueViewSet, ProducerIssueViewSet, PlantingViewSet, ProducerPlantingViewSet
+from producer.api.viewsets import ProducerViewSet, ProductionViewSet, IssueViewSet, PlantingViewSet, PulverizationViewSet
 from producer.views import ProducerAPIView, ProductionAPIView, ProductionByManagerAPIView, IssueAPIView, PlantingAPIView
 
 from product.api import viewsets as productviewsets
 from product.api import serializers as productserializers
-from product.views import ProductAPIView, OrderAPIView
+from product.views import ProductAPIView, OrderAPIView, OrderProductAPIView
 
 from user.api import viewsets as userviewsets
 from user.api import serializers as userserializers
@@ -41,6 +41,7 @@ routers.register(r'production', ProductionViewSet, basename='Production')
 routers.register(r'order', productviewsets.OrderViewSet, basename='Order')
 routers.register(r'issue', IssueViewSet, basename='Issue')
 routers.register(r'planting', PlantingViewSet, basename='Planting')
+routers.register(r'pulverization', PulverizationViewSet, basename='Pulverization')
 
 
 urlpatterns = [
@@ -51,6 +52,8 @@ urlpatterns = [
     path('api/order/', OrderAPIView.as_view()),
     path('api/issue/', IssueAPIView.as_view()),
     path('api/planting/', PlantingAPIView.as_view()),
+
+    path('api/orderproduct/', OrderProductAPIView.as_view()),
 
     path('api/user/', UserAPIView.as_view()),
     path('api/token/', CustomTokenObtainPairView.as_view()),
