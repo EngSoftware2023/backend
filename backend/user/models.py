@@ -19,6 +19,8 @@ class UserManager(BaseUserManager):
             name=name,
             password=password,
         )
+
+        user.type = 'producer'
         user.save(using=self._db)
         return user
     

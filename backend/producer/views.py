@@ -23,8 +23,8 @@ class ProducerAPIView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        if("type" not in request.data):
-            request.data['type'] = 'producer'    
+        new_request = request.data.copy()
+
         if(len(request.data['password']) < 6):
             return Response({
                 'error': True,
@@ -42,17 +42,21 @@ class ProducerAPIView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         password = make_password(request.data['password'])
-        new_request = request.data.copy()
         new_request['password'] = password
         serializer = ProducerSerializer(data=new_request)
         if serializer.is_valid():
+            type_user = ''
+            if('type' not in request.data):
+                type_user = 'producer'
+            else:
+                type_user = 'admin'
 
             #create a user model to save the credentials
             user = User.objects.create(
                 email=request.data['email'],
                 password=password,
                 name=request.data['name'],
-                type=request.data['type']
+                type=type_user
             )
             
             user.save()
@@ -154,9 +158,21 @@ class ProducerAPIView(APIView):
 class ProductionAPIView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
-        production = Production.objects.all()
-        serializer = ProductionSerializer(production, many=True)
-        return Response(serializer.data)
+        user = request.user
+        if(user.type == 'producer'):
+            producer = Producer.objects.get(email=user.email)
+            production = Production.objects.filter(producer=producer.cpf)
+            serializer = ProductionSerializer(production, many=True)
+            return Response(serializer.data)
+        elif(user.type == 'admin'):
+            production = Production.objects.all()
+            serializer = ProductionSerializer(production, many=True)
+            return Response(serializer.data)
+        else:
+            return Response({
+                'error': True,
+                'message': 'Você não tem permissão para fazer isso!'
+            }, status=status.HTTP_401_UNAUTHORIZED)
 
     def post(self, request):
         user = request.user
@@ -235,17 +251,12 @@ class ProductionAPIView(APIView):
         
     def put(self, request):
         user = request.user
-        if(user.type != 'producer'):
-            return Response({
-                'error': True,
-                'message': 'Você não tem permissão para fazer isso!'
-            }, status=status.HTTP_401_UNAUTHORIZED)
+        producer = Producer.objects.get(cpf=request.data['producer'])
         if(not Production.objects.filter(id=request.data['id']).exists()):
             return Response({
                 'error': True,
                 'message': 'Esta produção não existe!'
             }, status=status.HTTP_400_BAD_REQUEST)
-        producer = Producer.objects.get(email=user.email)
         if(not Production.objects.filter(id=request.data['id'], producer=producer.cpf).exists()):
             return Response({
                 'error': True,
