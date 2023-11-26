@@ -311,17 +311,15 @@ class ProductionAPIView(APIView):
                 'error': True,
                 'message': 'Esta produção não pertence a você!'
             }, status=status.HTTP_400_BAD_REQUEST)
-        if(not Production.objects.filter(id=request.GET).exists()):
+        if(not Production.objects.filter(id=request.data['id']).exists()):
             return Response({
                 'error': True,
                 'message': 'Esta produção não existe!'
             }, status=status.HTTP_400_BAD_REQUEST)
-        production = Production.objects.get(id=request.GET)
+        production = Production.objects.get(id=request.data['id'])
         product = Product.objects.get(name=production.product.name)
         product.stock -= production.quantity
         product.save()
-        producer_production = ProducerProduction.objects.get(production=production)
-        producer_production.delete()
         production.delete()
         return Response({
             'error': False,
