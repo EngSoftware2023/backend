@@ -621,3 +621,15 @@ class PlantingAPIView(APIView):
             'error': False,
             'message': 'Plantio excluído com sucesso!'
         }, status=status.HTTP_200_OK)
+
+class ProductionsByProductAPIView(APIView):
+    def get(self, request):
+        if(not Product.objects.filter(name=request.data['product']).exists()):
+            return Response({
+                'error': True,
+                'message': 'Este produto não existe!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        product = Product.objects.get(name=request.data['product'])
+        production = Production.objects.filter(product=product.name)
+        serializer = ProductionSerializer(production, many=True)
+        return Response(serializer.data)
