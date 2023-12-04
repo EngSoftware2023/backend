@@ -24,7 +24,7 @@ from producer.views import ProducerAPIView, ProductionAPIView, ProductionByManag
 
 from product.api import viewsets as productviewsets
 from product.api import serializers as productserializers
-from product.views import ProductAPIView, OrderAPIView, OrderProductAPIView
+from product.views import ProductAPIView, OrderAPIView, OrderProductAPIView, OrderVerificationAPIView
 
 from user.api import viewsets as userviewsets
 from user.api import serializers as userserializers
@@ -50,11 +50,13 @@ urlpatterns = [
     path('api/product/production/', ProductionsByProductAPIView.as_view()),
     path('api/production/', ProductionAPIView.as_view()),
     path('api/manager/production/', ProductionByManagerAPIView.as_view()),
-    path('api/order/', OrderAPIView.as_view()),
+
     path('api/issue/', IssueAPIView.as_view()),
     path('api/planting/', PlantingAPIView.as_view()),
 
+    path('api/order/', OrderAPIView.as_view()),
     path('api/orderproduct/', OrderProductAPIView.as_view()),
+    path('api/order/verification/', OrderVerificationAPIView.as_view()),
 
     path('api/user/', UserAPIView.as_view()),
     path('api/token/', CustomTokenObtainPairView.as_view()),
