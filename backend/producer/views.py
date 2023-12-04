@@ -257,11 +257,7 @@ class ProductionAPIView(APIView):
                 'error': True,
                 'message': 'Esta produção não existe!'
             }, status=status.HTTP_400_BAD_REQUEST)
-        if(not Production.objects.filter(id=request.data['id'], producer=producer.cpf).exists()):
-            return Response({
-                'error': True,
-                'message': 'Esta produção não pertence a você!'
-            }, status=status.HTTP_400_BAD_REQUEST)
+
         if(not Product.objects.filter(name=request.data['product']).exists()):
             return Response({
                 'error': True,
@@ -295,11 +291,6 @@ class ProductionAPIView(APIView):
         
     def delete(self, request):
         user = request.user
-        if(user.type != 'producer'):
-            return Response({
-                'error': True,
-                'message': 'Você não tem permissão para fazer isso!'
-            }, status=status.HTTP_401_UNAUTHORIZED)
         if(not Production.objects.filter(id=request.data['id']).exists()):
             return Response({
                 'error': True,
