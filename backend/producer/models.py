@@ -14,7 +14,7 @@ class Producer(models.Model):
     password = models.CharField(max_length=200)
     productions = models.ManyToManyField("Production", through='ProducerProduction', related_name='productions')
     issues = models.ManyToManyField("Issue", through='ProducerIssue', related_name='issues')
-    plantings = models.ManyToManyField("Planting", through='ProducerPlanting' related_name='plantings')
+    plantings = models.ManyToManyField("Planting", through='ProducerPlanting', related_name='plantings')
 
     def __str__(self):
         return self.name
@@ -60,6 +60,7 @@ class Planting(models.Model):
     date = models.DateField(auto_now_add=True)
     expeted_harvest = models.DateField()
     status = models.CharField(max_length=50, default='Em crescimento')
+    pulverizations = models.ManyToManyField("Pulverization", through='PlantingPulverization', related_name='pulverizations')
 
     def __str__(self):
         return self.product.name + ' - ' + self.producer.name
@@ -70,3 +71,18 @@ class ProducerPlanting(models.Model):
 
     def __str__(self):
         return self.product.name + ' - ' + self.producer.name
+    
+class Pulverization(models.Model):
+    planting = models.ForeignKey(Planting, on_delete=models.CASCADE)
+    date = models.DateField(auto_now_add=True)
+    product = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.planting.product.name + ' - ' + self.planting.producer.name
+    
+class PlantingPulverization(models.Model):
+    planting = models.ForeignKey(Planting, on_delete=models.CASCADE)
+    pulverization = models.ForeignKey(Pulverization, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.planting.product.name + ' - ' + self.pulverization.date

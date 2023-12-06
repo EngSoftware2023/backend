@@ -6,7 +6,12 @@ class Product(models.Model):
     request = models.IntegerField(default=0)
 
     def __str__(self):
-        return self.name
+        return {
+            'name': self.name,
+            'stock': self.stock,
+            'request': self.request
+        
+        }
     
 class Order(models.Model):
     id = models.AutoField(primary_key=True)
@@ -26,4 +31,9 @@ class OrderProduct(models.Model):
     price = models.FloatField(null=True, blank=True, default=0)
 
     def __str__(self):
-        return str(self.id)
+        return {
+            'order': self.order.id,
+            'product': self.product.name,
+            'quantity': self.quantity,
+            'price': self.price
+        }

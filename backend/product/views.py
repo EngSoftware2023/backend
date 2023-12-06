@@ -99,10 +99,26 @@ class ProductAPIView(APIView):
             'message': 'Produto deletado com sucesso!'
         }, status=status.HTTP_200_OK)
 
+class OrderProductAPIView(APIView):
+    def get(self, request):
+        orderProducts = OrderProduct.objects.all()
+        serializer = OrderProductSerializer(orderProducts, many=True)
+        return Response(serializer.data)
+
 class OrderAPIView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
         orders = Order.objects.all()
+        # for order in orders:
+        #     for product in order.products.all():
+        #         print(product.name)
+        #         order_product = OrderProduct.objects.get(order=order.id, product=product.name)
+        #         print(order_product.quantity)
+        #         product = {
+        #             'name': product.name,
+        #             'quantity': order_product.quantity,
+        #             'price': order_product.price
+        #         }
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data)
     
