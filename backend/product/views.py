@@ -258,3 +258,27 @@ class OrderAPIView(APIView):
             'error': False,
             'message': 'Pedido deletado com sucesso!'
         }, status=status.HTTP_200_OK)
+    
+class OrderVerificationAPIView(APIView):
+    def get(self, request):
+        if(not Order.objects.filter(id=request.data["order"]).exists()):
+            return Response({
+                'error': True,
+                'message': 'Pedido não cadastrado!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        order = Order.objects.get(id=request.data["order"])
+        orderVerificated = OrderSerializer(order)
+        is_salable = True
+        index = 0
+        for product in orderVerificated.data["products"]:
+            productRegistered = Product.objects.get(name=product["product_name"])
+            if(product["quantity"] > productRegistered.stock):
+                is_salable = False
+            orderVerificated.data["products"][index]["stock"] = productRegistered.stock
+            index += 1
+        return Response({
+            'order': orderVerificated.data,
+            'is_salable': is_salable
+        })
+            
