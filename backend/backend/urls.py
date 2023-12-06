@@ -20,7 +20,7 @@ from rest_framework import routers
 
 from producer.api.serializers import ProducerSerializer, ProductionSerializer
 from producer.api.viewsets import ProducerViewSet, ProductionViewSet, IssueViewSet, PlantingViewSet, PulverizationViewSet
-from producer.views import ProducerAPIView, ProductionAPIView, ProductionByManagerAPIView, IssueAPIView, PlantingAPIView
+from producer.views import ProducerAPIView, ProductionAPIView, ProductionByManagerAPIView, IssueAPIView, PlantingAPIView, ProductionByManagerAPIView, ProductionsByProductAPIView
 
 from product.api import viewsets as productviewsets
 from product.api import serializers as productserializers
@@ -47,6 +47,7 @@ routers.register(r'pulverization', PulverizationViewSet, basename='Pulverization
 urlpatterns = [
     path('api/producer/', ProducerAPIView.as_view()),
     path('api/product/', ProductAPIView.as_view()),
+    path('api/product/production/', ProductionsByProductAPIView.as_view()),
     path('api/production/', ProductionAPIView.as_view()),
     path('api/manager/production/', ProductionByManagerAPIView.as_view()),
     path('api/order/', OrderAPIView.as_view()),
